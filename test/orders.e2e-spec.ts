@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
 import { Connection } from 'mongoose';
 import { getConnectionToken } from '@nestjs/mongoose';
-import { AppModule } from 'src/app.module';
+import { AppModule } from './../src/app.module';
+import request from 'supertest';
+import { Response } from 'supertest';
 
 describe('OrdersController (e2e)', () => {
   let app: INestApplication;
@@ -30,11 +31,10 @@ describe('OrdersController (e2e)', () => {
       throw new Error('Connection not found');
     }
 
-    // Create a user for testing
-    const userResponse = await request(app.getHttpServer())
+    const userResponse: Response = await request(app.getHttpServer())
       .post('/users')
       .send({ name: 'Test User', email: 'test@example.com', isActive: true });
-    createdUserId = userResponse.body._id;
+    createdUserId = (userResponse.body as { _id: string })._id;
   });
   afterAll(async () => {
     await app.close();
@@ -49,14 +49,14 @@ describe('OrdersController (e2e)', () => {
     });
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('_id');
-    expect(response.body.userId).toBe(createdUserId);
+    expect(response.body as { userId: string }).toBe(createdUserId);
   });
 
   it('/orders (GET) should retrieve all orders', async () => {
     const response = await request(app.getHttpServer()).get('/orders');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
-    expect(response.body[0].userId).toBe(createdUserId);
+    expect(response.body[0].userId as { userId: string }).toBe(createdUserId);
   });
 
   it('/orders/:id (GET) should retrieve an order by id', async () => {
