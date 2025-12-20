@@ -17,17 +17,17 @@ export class OrdersService {
     return this.orderModel.find().exec();
   }
 
-  async findOne(id: string): Promise<Order> {
+  async findOne(id: string): Promise<Order | null> {
     return this.orderModel.findById(id).exec();
   }
 
-  async update(id: string, orderDto: Partial<Order>): Promise<Order> {
+  async update(id: string, orderDto: Partial<Order>): Promise<Order | null> {
     return this.orderModel
       .findByIdAndUpdate(id, orderDto, { new: true })
       .exec();
   }
 
-  async delete(id: string): Promise<Order> {
+  async delete(id: string): Promise<Order | null> {
     return this.orderModel.findByIdAndDelete(id).exec();
   }
 }

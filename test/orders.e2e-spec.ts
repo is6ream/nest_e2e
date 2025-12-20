@@ -4,7 +4,6 @@ import { Connection } from 'mongoose';
 import { getConnectionToken } from '@nestjs/mongoose';
 import { AppModule } from './../src/app.module';
 import request from 'supertest';
-import { Response } from 'supertest';
 
 describe('OrdersController (e2e)', () => {
   let app: INestApplication;
@@ -22,19 +21,17 @@ describe('OrdersController (e2e)', () => {
     // Получаем подключение к базе данных
     connection = moduleFixture.get<Connection>(getConnectionToken());
 
-    if (connection && connection.db) {
-      const collections = await connection.db.listCollections().toArray();
-      for (const collection of collections) {
-        await connection.db.collection(collection.name).deleteMany({});
-      }
-    } else {
-      throw new Error('Connection not found');
+    // Очистка всех коллекций в тестовой базе данных
+    const collections = await connection.db.listCollections().toArray();
+    for (const collection of collections) {
+      await connection.db.collection(collection.name).deleteMany({});
     }
 
-    const userResponse: Response = await request(app.getHttpServer())
+    // Create a user for testing
+    const userResponse = await request(app.getHttpServer())
       .post('/users')
       .send({ name: 'Test User', email: 'test@example.com', isActive: true });
-    createdUserId = (userResponse.body as { _id: string })._id;
+    createdUserId = userResponse.body._id;
   });
   afterAll(async () => {
     await app.close();
@@ -49,14 +46,14 @@ describe('OrdersController (e2e)', () => {
     });
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('_id');
-    expect(response.body as { userId: string }).toBe(createdUserId);
+    expect(response.body.userId).toBe(createdUserId);
   });
 
   it('/orders (GET) should retrieve all orders', async () => {
     const response = await request(app.getHttpServer()).get('/orders');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
-    expect(response.body[0].userId as { userId: string }).toBe(createdUserId);
+    expect(response.body[0].userId).toBe(createdUserId);
   });
 
   it('/orders/:id (GET) should retrieve an order by id', async () => {

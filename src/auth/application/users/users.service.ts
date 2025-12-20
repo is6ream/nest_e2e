@@ -17,15 +17,15 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string): Promise<User | null> {
     return this.userModel.findById(id).exec();
   }
 
-  async update(id: string, userDto: Partial<User>): Promise<User> {
+  async update(id: string, userDto: Partial<User>): Promise<User | null> {
     return this.userModel.findByIdAndUpdate(id, userDto, { new: true }).exec();
   }
 
-  async delete(id: string): Promise<User> {
+  async delete(id: string): Promise<User | null> {
     return this.userModel.findByIdAndDelete(id).exec();
   }
 }
