@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../../src/app.module';
 import { Connection } from 'mongoose';
 import { getConnectionToken } from '@nestjs/mongoose';
+import { AppModule } from 'src/app.module';
 
 describe('OrdersController (e2e)', () => {
   let app: INestApplication;
@@ -18,27 +18,24 @@ describe('OrdersController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // 1. Получаем подключение с проверкой
-    const connection = moduleFixture.get<Connection>(getConnectionToken());
+    // Получаем подключение к базе данных
+    connection = moduleFixture.get<Connection>(getConnectionToken());
 
-    // 2. Теперь connection точно не undefined
-    const collections = await connection.db.listCollections().toArray();
-
-    // 3. Очистка коллекций (пропускаем системные)
-    for (const collection of collections) {
-      if (!collection.name.startsWith('system.')) {
+    if (connection && connection.db) {
+      const collections = await connection.db.listCollections().toArray();
+      for (const collection of collections) {
         await connection.db.collection(collection.name).deleteMany({});
       }
+    } else {
+      throw new Error('Connection not found');
     }
 
-    // 4. Создаём тестового пользователя
+    // Create a user for testing
     const userResponse = await request(app.getHttpServer())
       .post('/users')
       .send({ name: 'Test User', email: 'test@example.com', isActive: true });
-
     createdUserId = userResponse.body._id;
   });
-
   afterAll(async () => {
     await app.close();
   });
