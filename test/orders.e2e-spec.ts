@@ -30,7 +30,8 @@ describe('OrdersController (e2e)', () => {
     // Create a user for testing
     const userResponse = await request(app.getHttpServer())
       .post('/users')
-      .send({ name: 'Test User', email: 'test@example.com', isActive: true });
+      .send({ name: 'Test User', email: 'test@example.com', isActive: true })
+      .expect(201);
     createdUserId = userResponse.body._id;
   });
   afterAll(async () => {
