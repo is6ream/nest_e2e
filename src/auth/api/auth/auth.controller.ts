@@ -1,17 +1,13 @@
 import { Controller, Post, Body, Res, HttpCode } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
+import type { Response } from 'express';
+import { UsersService } from 'src/auth/application/users/users.service';
 
 @Controller('auth')
 export class AuthController {
   private readonly jwtService: JwtService;
 
-  constructor() {
-    this.jwtService = new JwtService({
-      secret: 'your_secret_key',
-      signOptions: { expiresIn: '15m' },
-    });
-  }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post('login')
   @HttpCode(200)
@@ -20,7 +16,7 @@ export class AuthController {
     @Body('password') password: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const user = await this.userModel.findOne({ email }).exec();
+    const user = await this.usersService.findByEmail(email);
     if (!user) {
       return { message: 'Invalid credentials' };
     }
@@ -31,7 +27,7 @@ export class AuthController {
         return { message: 'Invalid credentials' };
       }
     }
-    const payload = { email };
+    const payload = { email, id: user._id };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
